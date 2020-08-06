@@ -1,0 +1,21 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kat201/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true kat201/react-test npm test
+
+after_success:
+  - docker build -t kat201/multi-nginx ./nginx
+  - docker build -t kat201/multi-worker ./worker
+  - docker build -t kat201/multi-server ./server
+  - docker build -t kat201/multi-client ./client
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push kat201/multi-nginx
+  - docker push kat201/multi-worker
+  - docker push kat201/multi-server
+  - docker push kat201/multi-client
